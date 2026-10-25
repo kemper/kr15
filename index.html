@@ -1,0 +1,809 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>KR15 // PARKED</title>
+  <meta name="description" content="KR15 is parked. Held in reserve for a future build.">
+  <meta name="theme-color" content="#07020f">
+  <meta property="og:title" content="KR15 // PARKED">
+  <meta property="og:description" content="This node is in cryostasis. Held in reserve for a future build.">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='12' fill='%2307020f'/%3E%3Ctext x='32' y='45' font-family='monospace' font-size='36' font-weight='bold' text-anchor='middle' fill='%2300f0ff'%3EK%3C/text%3E%3C/svg%3E">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700;900&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@700&text=%E4%BA%88%E7%B4%84%E6%B8%88%E9%A7%90%E8%BB%8A%E4%B8%AD&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #07020f;
+      --cyan: #00f0ff;
+      --mag: #ff2a6d;
+      --yel: #f9f002;
+      --txt: #d1f7ff;
+      --dim: #6b7fa3;
+      --panel: rgba(6, 3, 18, .84);
+      --notch: 28px;
+    }
+
+    * { box-sizing: border-box; }
+
+    html {
+      min-height: 100%;
+      background: var(--bg);
+    }
+
+    /* no background on body: it would paint over the negative z-index backdrop layers */
+    body {
+      margin: 0;
+      color: var(--txt);
+    }
+
+    body {
+      font-family: 'Share Tech Mono', ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      min-height: 100dvh;
+      padding: 32px 16px;
+      overflow-x: hidden;
+    }
+
+    /* ---------- backdrop ---------- */
+
+    #city {
+      position: fixed;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      display: block;
+      z-index: -3;
+    }
+
+    .vignette {
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      z-index: -2;
+      background: radial-gradient(ellipse at 50% 45%, transparent 35%, rgba(0, 0, 0, .78) 100%);
+    }
+
+    .scanlines {
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      z-index: 10;
+      background: repeating-linear-gradient(to bottom, rgba(255, 255, 255, .035) 0 1px, transparent 1px 3px);
+    }
+
+    /* ---------- neon signs ---------- */
+
+    .sign {
+      position: fixed;
+      top: 50%;
+      writing-mode: vertical-rl;
+      text-orientation: upright;
+      font-family: 'Noto Sans JP', 'Hiragino Sans', 'Yu Gothic', Meiryo, sans-serif;
+      line-height: 1.1;
+      font-size: clamp(30px, 3.6vw, 52px);
+      font-weight: 700;
+      letter-spacing: .18em;
+      padding: .45em .25em;
+      border: 2px solid currentColor;
+      border-radius: 6px;
+      z-index: -1;
+      user-select: none;
+    }
+
+    .sign small {
+      display: block;
+      text-orientation: sideways;
+      font-family: 'Orbitron', sans-serif;
+      font-size: .22em;
+      letter-spacing: .3em;
+      margin-top: .8em;
+    }
+
+    .sign-l {
+      left: clamp(16px, 4vw, 64px);
+      transform: translateY(-62%);
+      color: #c9fbff;
+      border-color: var(--cyan);
+      text-shadow: 0 0 4px var(--cyan), 0 0 14px var(--cyan), 0 0 32px var(--cyan);
+      box-shadow: 0 0 10px var(--cyan), inset 0 0 10px rgba(0, 240, 255, .5);
+      animation: flicker-a 7s infinite;
+    }
+
+    .sign-r {
+      right: clamp(16px, 4vw, 64px);
+      transform: translateY(-38%);
+      color: #ffd6e4;
+      border-color: var(--mag);
+      text-shadow: 0 0 4px var(--mag), 0 0 14px var(--mag), 0 0 32px var(--mag);
+      box-shadow: 0 0 10px var(--mag), inset 0 0 10px rgba(255, 42, 109, .5);
+      animation: flicker-b 5s infinite;
+    }
+
+    @keyframes flicker-a {
+      0%, 18%, 21%, 60%, 100% { opacity: 1; }
+      19% { opacity: .25; }
+      20% { opacity: .8; }
+      61% { opacity: .4; }
+    }
+
+    @keyframes flicker-b {
+      0%, 40%, 44%, 46%, 100% { opacity: 1; }
+      41% { opacity: .2; }
+      43% { opacity: .6; }
+      45% { opacity: .15; }
+    }
+
+    @media (max-width: 1080px) {
+      .sign { display: none; }
+    }
+
+    /* ---------- main panel ---------- */
+
+    main {
+      width: min(640px, 100%);
+      filter: drop-shadow(0 0 22px rgba(0, 240, 255, .18));
+    }
+
+    .hud {
+      padding: 1px;
+      background: linear-gradient(135deg, var(--cyan), rgba(0, 240, 255, .15) 35%, rgba(255, 42, 109, .15) 65%, var(--mag));
+      clip-path: polygon(0 0, calc(100% - var(--notch)) 0, 100% var(--notch), 100% 100%, var(--notch) 100%, 0 calc(100% - var(--notch)));
+    }
+
+    .hud-inner {
+      background: var(--panel);
+      clip-path: polygon(0 0, calc(100% - var(--notch)) 0, 100% var(--notch), 100% 100%, var(--notch) 100%, 0 calc(100% - var(--notch)));
+      padding: clamp(22px, 5vw, 40px);
+    }
+
+    .eyebrow {
+      margin: 0;
+      font-size: 12px;
+      letter-spacing: .22em;
+      text-transform: uppercase;
+      color: var(--mag);
+    }
+
+    h1 {
+      margin: .08em 0 .12em;
+      font-family: 'Orbitron', sans-serif;
+      font-weight: 900;
+      font-size: clamp(72px, 19vw, 144px);
+      line-height: 1;
+      letter-spacing: .06em;
+      color: #fff;
+      text-shadow: 0 0 6px rgba(0, 240, 255, .9), 0 0 28px rgba(0, 240, 255, .55), 0 0 60px rgba(255, 42, 109, .35);
+    }
+
+    .glitch { position: relative; display: inline-block; }
+
+    .glitch::before,
+    .glitch::after {
+      content: attr(data-text);
+      position: absolute;
+      inset: 0;
+      text-shadow: none;
+      clip-path: inset(0 0 100% 0);
+    }
+
+    .glitch::before { color: var(--mag); animation: glitch-a 4.2s infinite steps(1); }
+    .glitch::after  { color: var(--cyan); animation: glitch-b 3.4s infinite steps(1); }
+
+    @keyframes glitch-a {
+      0%, 88%, 100% { clip-path: inset(0 0 100% 0); transform: none; }
+      89% { clip-path: inset(8% 0 62% 0);  transform: translate(-7px, -2px); }
+      91% { clip-path: inset(48% 0 22% 0); transform: translate(6px, 1px); }
+      93% { clip-path: inset(28% 0 50% 0); transform: translate(-4px, 2px); }
+      95% { clip-path: inset(72% 0 4% 0);  transform: translate(5px, -1px); }
+    }
+
+    @keyframes glitch-b {
+      0%, 82%, 100% { clip-path: inset(0 0 100% 0); transform: none; }
+      83% { clip-path: inset(60% 0 12% 0); transform: translate(6px, 2px); }
+      85% { clip-path: inset(15% 0 70% 0); transform: translate(-5px, -1px); }
+      87% { clip-path: inset(38% 0 40% 0); transform: translate(4px, 0); }
+    }
+
+    .tag {
+      margin: 0 0 26px;
+      font-size: 16px;
+      line-height: 1.5;
+      opacity: .9;
+    }
+
+    .tag b { color: var(--yel); font-weight: normal; }
+
+    /* ---------- stats ---------- */
+
+    .stats {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 16px 20px;
+      margin: 0 0 26px;
+    }
+
+    .stats div {
+      border-left: 2px solid rgba(0, 240, 255, .45);
+      padding-left: 12px;
+    }
+
+    .stats dt {
+      font-size: 11px;
+      letter-spacing: .2em;
+      text-transform: uppercase;
+      color: var(--dim);
+      margin-bottom: 4px;
+    }
+
+    .stats dd {
+      margin: 0;
+      font-size: 16px;
+      color: var(--cyan);
+      white-space: nowrap;
+    }
+
+    .dot {
+      display: inline-block;
+      width: 8px;
+      height: 8px;
+      margin-right: 6px;
+      border-radius: 50%;
+      background: var(--yel);
+      box-shadow: 0 0 8px var(--yel);
+      vertical-align: 1px;
+      animation: blink 1.6s infinite;
+    }
+
+    @keyframes blink { 50% { opacity: .2; } }
+
+    .redacted {
+      background: var(--txt);
+      color: transparent;
+      padding: 0 4px;
+      cursor: help;
+      transition: background .2s, color .2s;
+    }
+
+    .redacted:hover,
+    .redacted:focus {
+      background: transparent;
+      color: var(--mag);
+      outline: none;
+    }
+
+    /* ---------- terminal ---------- */
+
+    .term {
+      border: 1px solid rgba(0, 240, 255, .3);
+      background: rgba(0, 0, 0, .55);
+      transition: border-color .2s, box-shadow .2s;
+    }
+
+    .term:focus-within {
+      border-color: var(--cyan);
+      box-shadow: 0 0 14px rgba(0, 240, 255, .3);
+    }
+
+    .term-bar {
+      display: flex;
+      justify-content: space-between;
+      padding: 6px 12px;
+      font-size: 11px;
+      letter-spacing: .15em;
+      color: var(--dim);
+      border-bottom: 1px solid rgba(0, 240, 255, .2);
+    }
+
+    .term-bar span:last-child { color: var(--mag); letter-spacing: .3em; }
+
+    .term-out {
+      height: 13.5em;
+      overflow-y: auto;
+      padding: 12px;
+      font-size: 14px;
+      line-height: 1.5;
+      white-space: pre-wrap;
+      overflow-wrap: anywhere;
+      scrollbar-width: thin;
+      scrollbar-color: rgba(0, 240, 255, .4) transparent;
+    }
+
+    .term-out > div { min-height: 1.5em; }
+
+    .prompt-row {
+      display: none;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 12px;
+      border-top: 1px solid rgba(0, 240, 255, .2);
+    }
+
+    .js .prompt-row { display: flex; }
+
+    .prompt-row label,
+    .ps { color: var(--mag); white-space: nowrap; }
+
+    .prompt-row input {
+      flex: 1;
+      min-width: 0;
+      background: transparent;
+      border: 0;
+      outline: none;
+      color: var(--txt);
+      caret-color: var(--cyan);
+      font: inherit;
+      font-size: 16px;
+    }
+
+    .ok   { color: var(--cyan); }
+    .err  { color: var(--mag); }
+    .warn { color: var(--yel); }
+    .dim  { color: var(--dim); }
+    .hl   { color: #fff; }
+
+    footer {
+      margin-top: 22px;
+      font-size: 12px;
+      letter-spacing: .14em;
+      text-transform: uppercase;
+      color: var(--dim);
+      text-align: center;
+      text-shadow: 0 0 6px #000;
+    }
+
+    /* ---------- `glitch` command ---------- */
+
+    .glitching main { animation: shake .9s steps(2) both; }
+
+    @keyframes shake {
+      0%   { transform: translate(0); filter: hue-rotate(0); }
+      20%  { transform: translate(-4px, 2px) skewX(3deg); filter: hue-rotate(90deg); }
+      40%  { transform: translate(5px, -2px) skewX(-4deg); filter: hue-rotate(200deg) saturate(2); }
+      60%  { transform: translate(-3px, 0) skewX(2deg); filter: invert(.15); }
+      80%  { transform: translate(2px, 1px); filter: hue-rotate(300deg); }
+      100% { transform: translate(0); filter: none; }
+    }
+
+    @media (max-width: 420px) {
+      :root { --notch: 18px; }
+      .stats { gap: 14px 12px; }
+      .stats dd { font-size: 14px; }
+      .term-out { font-size: 12.5px; }
+      footer { letter-spacing: .08em; }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after { animation: none !important; transition: none !important; }
+    }
+  </style>
+</head>
+<body>
+  <canvas id="city" aria-hidden="true"></canvas>
+  <div class="vignette" aria-hidden="true"></div>
+  <div class="scanlines" aria-hidden="true"></div>
+
+  <div class="sign sign-l" aria-hidden="true">予約済<small>RESERVED</small></div>
+  <div class="sign sign-r" aria-hidden="true">駐車中<small>PARKED</small></div>
+
+  <main>
+    <div class="hud">
+      <div class="hud-inner">
+        <p class="eyebrow">// node 0x4B523135 &mdash; sector 15</p>
+        <h1 class="glitch" data-text="KR15">KR15</h1>
+        <p class="tag">This domain is <b>parked</b>. The storefront closed long ago &mdash; the address is being held in reserve for a future build.</p>
+
+        <dl class="stats">
+          <div><dt>Status</dt><dd><span class="dot"></span>Reserved</dd></div>
+          <div><dt>Owner</dt><dd><span class="redacted" tabindex="0" title="nice try">CLASSIFIED</span></dd></div>
+          <div><dt>Cryo since</dt><dd>2015.04.04</dd></div>
+          <div><dt>Time parked</dt><dd id="uptime">11y 204d</dd></div>
+        </dl>
+
+        <section class="term" aria-label="Terminal">
+          <div class="term-bar"><span>KR15://SH</span><span>&#9679;&#9679;&#9679;</span></div>
+          <div class="term-out" id="out" aria-live="polite"><noscript><span class="dim">&gt; javascript offline. the city sleeps anyway.</span></noscript></div>
+          <form class="prompt-row" id="prompt">
+            <label for="cmd">guest@kr15:~$</label>
+            <input id="cmd" type="text" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" aria-label="Terminal command">
+          </form>
+        </section>
+      </div>
+    </div>
+  </main>
+
+  <footer>KR15 &copy; 2015&ndash;<span id="year">2026</span> &middot; no ads &middot; no shop &middot; just rain</footer>
+
+  <script>
+  (() => {
+    'use strict';
+
+    const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const $ = (s) => document.querySelector(s);
+    const sleep = (ms) => new Promise((r) => setTimeout(r, reduce ? 0 : ms));
+    const rand = (a, b) => a + Math.random() * (b - a);
+    const pick = (arr) => arr[Math.floor(Math.random() * arr.length)];
+
+    document.documentElement.classList.add('js');
+    $('#year').textContent = new Date().getFullYear();
+
+    /* ---------- city + rain ---------- */
+
+    const cv = $('#city');
+    const ctx = cv.getContext('2d');
+    let W = 0, H = 0, dpr = 1, skyline = null, drops = [], storm = 1, running = false;
+
+    function buildSkyline() {
+      skyline = document.createElement('canvas');
+      skyline.width = W * dpr;
+      skyline.height = H * dpr;
+      const s = skyline.getContext('2d');
+      s.scale(dpr, dpr);
+
+      const sky = s.createLinearGradient(0, 0, 0, H);
+      sky.addColorStop(0, '#04010a');
+      sky.addColorStop(.5, '#10052a');
+      sky.addColorStop(.78, '#36093f');
+      sky.addColorStop(1, '#07020f');
+      s.fillStyle = sky;
+      s.fillRect(0, 0, W, H);
+
+      const haze = s.createRadialGradient(W * .5, H * .9, 0, W * .5, H * .9, Math.max(W, H) * .75);
+      haze.addColorStop(0, 'rgba(255, 42, 109, .28)');
+      haze.addColorStop(1, 'rgba(255, 42, 109, 0)');
+      s.fillStyle = haze;
+      s.fillRect(0, 0, W, H);
+
+      const windows = ['rgba(0,240,255,', 'rgba(255,42,109,', 'rgba(249,240,2,', 'rgba(209,247,255,'];
+      const layers = [
+        { min: .38, max: .66, col: '#150830', bw: [28, 64], win: .05, ws: 2 },
+        { min: .26, max: .52, col: '#0c0420', bw: [36, 84], win: .08, ws: 2 },
+        { min: .12, max: .34, col: '#050210', bw: [50, 120], win: .12, ws: 3 },
+      ];
+
+      layers.forEach((L, li) => {
+        let x = rand(-40, 0);
+        while (x < W) {
+          const bw = rand(L.bw[0], L.bw[1]);
+          const bh = H * rand(L.min, L.max);
+          const top = H - bh;
+          s.fillStyle = L.col;
+          s.fillRect(x, top, bw, bh);
+
+          if (Math.random() < .3) {
+            const ax = x + rand(6, bw - 6);
+            const ah = rand(10, 40);
+            s.fillRect(ax, top - ah, 2, ah);
+            s.fillStyle = 'rgba(255,42,109,.9)';
+            s.fillRect(ax - 1, top - ah - 2, 4, 3);
+          }
+
+          const step = L.ws * 3;
+          for (let wy = top + 8; wy < H - 6; wy += step + 3) {
+            for (let wx = x + 5; wx < x + bw - 5; wx += step) {
+              if (Math.random() < L.win) {
+                s.fillStyle = pick(windows) + rand(.25, .8).toFixed(2) + ')';
+                s.fillRect(wx, wy, L.ws, L.ws + 1);
+              }
+            }
+          }
+
+          if (li === 2 && Math.random() < .22 && bh > 80) {
+            const color = Math.random() < .5 ? '#ff2a6d' : '#00f0ff';
+            const sx = x + rand(8, bw - 16);
+            const sy = top + rand(14, Math.min(60, bh - 50));
+            s.save();
+            s.shadowColor = color;
+            s.shadowBlur = 16;
+            s.fillStyle = color;
+            s.fillRect(sx, sy, 6, rand(28, 56));
+            s.restore();
+          }
+
+          x += bw + rand(0, 8);
+        }
+      });
+    }
+
+    function newDrop(anywhere) {
+      return {
+        x: rand(0, W * 1.25),
+        y: anywhere ? rand(0, H) : rand(-60, -10),
+        l: rand(8, 22),
+        v: rand(7, 15),
+      };
+    }
+
+    function makeDrops() {
+      const n = Math.round((W * H) / 6500 * storm);
+      drops = Array.from({ length: n }, () => newDrop(true));
+    }
+
+    function draw() {
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      ctx.drawImage(skyline, 0, 0, W, H);
+      ctx.strokeStyle = 'rgba(170, 220, 255, .26)';
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+      for (const d of drops) {
+        ctx.moveTo(d.x, d.y);
+        ctx.lineTo(d.x - d.l * .22, d.y + d.l);
+        if (!reduce) {
+          d.y += d.v;
+          d.x -= d.v * .22;
+          if (d.y > H) Object.assign(d, newDrop(false));
+        }
+      }
+      ctx.stroke();
+    }
+
+    function loop() {
+      draw();
+      requestAnimationFrame(loop);
+    }
+
+    function resize() {
+      W = window.innerWidth;
+      H = window.innerHeight;
+      dpr = Math.min(window.devicePixelRatio || 1, 2);
+      cv.width = W * dpr;
+      cv.height = H * dpr;
+      buildSkyline();
+      makeDrops();
+      if (reduce) draw();
+    }
+
+    let resizeTimer;
+    window.addEventListener('resize', () => {
+      clearTimeout(resizeTimer);
+      resizeTimer = setTimeout(resize, 150);
+    });
+    resize();
+    if (!reduce && !running) { running = true; loop(); }
+
+    /* ---------- time parked ---------- */
+
+    const born = new Date('2015-04-04T16:09:46-04:00');
+    const pad = (n) => String(n).padStart(2, '0');
+    const upEl = $('#uptime');
+
+    function tick() {
+      const now = new Date();
+      let y = now.getFullYear() - born.getFullYear();
+      const anniv = new Date(born);
+      anniv.setFullYear(born.getFullYear() + y);
+      if (anniv > now) { y--; anniv.setFullYear(born.getFullYear() + y); }
+      let s = Math.floor((now - anniv) / 1000);
+      const d = Math.floor(s / 86400); s %= 86400;
+      const h = Math.floor(s / 3600); s %= 3600;
+      const m = Math.floor(s / 60); s %= 60;
+      upEl.textContent = `${y}y ${d}d ${pad(h)}:${pad(m)}:${pad(s)}`;
+    }
+    tick();
+    setInterval(tick, 1000);
+
+    /* ---------- terminal ---------- */
+
+    const out = $('#out');
+    const form = $('#prompt');
+    const input = $('#cmd');
+    const history = [];
+    let hIdx = 0;
+    let busy = false;
+
+    // print('text', 'cls') or print([['seg', 'cls'], ['seg']])
+    function print(content, cls) {
+      const ln = document.createElement('div');
+      const segs = Array.isArray(content) ? content : [[content, cls]];
+      for (const [text, c] of segs) {
+        const span = document.createElement('span');
+        if (c) span.className = c;
+        span.textContent = text;
+        ln.append(span);
+      }
+      out.append(ln);
+      out.scrollTop = out.scrollHeight;
+      return ln;
+    }
+
+    async function play(lines, delay = 260) {
+      for (const l of lines) {
+        Array.isArray(l[0]) ? print(l[0]) : print(l[0], l[1]);
+        await sleep(delay);
+      }
+    }
+
+    async function progress(label, ms = 1400) {
+      const ln = print('');
+      const steps = 20;
+      for (let i = 0; i <= steps; i++) {
+        const bar = '█'.repeat(i) + '░'.repeat(steps - i);
+        ln.textContent = `${label} [${bar}] ${Math.round((i / steps) * 100)}%`;
+        await sleep(ms / steps);
+      }
+    }
+
+    function glitch() {
+      document.body.classList.remove('glitching');
+      void document.body.offsetWidth;
+      document.body.classList.add('glitching');
+      setTimeout(() => document.body.classList.remove('glitching'), 950);
+    }
+
+    const files = {
+      'readme.txt': [
+        ['This node used to sell things.', 'hl'],
+        ['Now it waits in the rain for its next job.', ''],
+      ],
+      'shop.bak': [
+        ['ERR: archive corrupted in the great 2015 decommission.', 'err'],
+        ['nothing to buy here. nothing to sell, either.', 'dim'],
+      ],
+    };
+
+    const commands = {
+      help: () => play([
+        ['available commands:', 'hl'],
+        ['  status    whoami    ls        cat <file>', 'ok'],
+        ['  wake      hack      rain      glitch', 'ok'],
+        ['  date      clear     exit', 'ok'],
+      ], 0),
+
+      status: () => play([
+        [[['node    '], ['kr15', 'hl']]],
+        [[['state   '], ['PARKED', 'warn']]],
+        [[['power   '], ['cryostasis / minimal draw', 'ok']]],
+        [[['owner   '], ['retains all rights to this address', 'ok']]],
+        [[['eta     '], ['undisclosed', 'dim']]],
+      ], 0),
+
+      whoami: () => play([
+        ['guest. unregistered netrunner. clearance: none.', ''],
+      ], 0),
+
+      ls: () => play([
+        [[['readme.txt  '], ['shop.bak  '], ['plans/', 'ok']]],
+      ], 0),
+
+      cat: (args) => {
+        const f = (args[0] || '').replace(/^\.\//, '');
+        if (!f) return play([['usage: cat <file>', 'dim']], 0);
+        if (f.replace(/\/$/, '') === 'plans') return play([['cat: plans/: is a directory (and it is encrypted)', 'err']], 0);
+        if (files[f]) return play(files[f], 0);
+        return play([[`cat: ${f}: no such file`, 'err']], 0);
+      },
+
+      cd: (args) => {
+        const d = (args[0] || '').replace(/\/$/, '');
+        if (d === 'plans') return play([['permission denied: plans/ is encrypted with owner-only keys.', 'err']], 0);
+        return play([['you are already exactly where you need to be.', 'dim']], 0);
+      },
+
+      wake: async () => {
+        await play([['initiating cold boot sequence...', 'warn']], 300);
+        await progress('thawing', 1600);
+        await sleep(250);
+        await play([
+          ['ERR 0x15: ACCESS DENIED', 'err'],
+          ['the owner has not issued a wake order. node stays parked.', 'dim'],
+        ], 200);
+      },
+
+      hack: async () => {
+        await play([
+          [[['bypassing black ICE ........ '], ['OK', 'ok']]],
+          [[['spoofing netwatch beacon ... '], ['OK', 'ok']]],
+          [[['injecting daemon ........... '], ['OK', 'ok']]],
+        ], 380);
+        await progress('cracking owner keys', 1800);
+        if (!reduce) glitch();
+        await sleep(300);
+        await play([
+          ['!! COUNTER-INTRUSION DETECTED !!', 'err'],
+          ['lol. no.', 'warn'],
+        ], 250);
+      },
+
+      rain: () => {
+        storm = storm >= 4 ? 1 : storm * 2;
+        makeDrops();
+        if (reduce) draw();
+        const label = { 1: 'drizzle', 2: 'downpour', 4: 'acid storm' }[storm];
+        return play([[`precipitation set to x${storm} (${label}).`, 'ok']], 0);
+      },
+
+      glitch: () => {
+        if (reduce) return play([['glitch suppressed: reduced motion is on.', 'dim']], 0);
+        glitch();
+        return play([['r̷e̸a̵l̶i̷t̸y̴ ̶d̵e̸s̷y̶n̸c̴ ̷d̵e̷t̵e̸c̴t̷e̶d̵', 'err']], 0);
+      },
+
+      date: () => {
+        const now = new Date();
+        const nc = new Date(now);
+        nc.setFullYear(2077);
+        return play([
+          [[['local       '], [now.toDateString(), 'hl']]],
+          [[['night city  '], [nc.toDateString(), 'warn']]],
+        ], 0);
+      },
+
+      clear: () => { out.textContent = ''; },
+
+      exit: () => {
+        input.blur();
+        return play([['there is no exit. only the rain.', 'dim']], 0);
+      },
+
+      sudo: () => play([
+        ['guest is not in the sudoers file.', 'err'],
+        ['this incident will be reported to netwatch.', 'dim'],
+      ], 0),
+
+      rm: () => play([['permission denied. nice try, choom.', 'err']], 0),
+      hi: () => play([['hey, choom. nothing to see here. yet.', 'ok']], 0),
+    };
+    commands.hello = commands.hi;
+    commands.dir = commands.ls;
+
+    async function run(raw) {
+      const line = raw.trim();
+      print([['guest@kr15:~$ ', 'ps'], [line]]);
+      if (!line) return;
+      history.push(line);
+      hIdx = history.length;
+      const [name, ...args] = line.split(/\s+/);
+      const fn = commands[name.toLowerCase()];
+      if (fn) await fn(args);
+      else print([[`command not found: ${name}. `, 'err'], ['try `help`.', 'dim']]);
+    }
+
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      if (busy) return;
+      const v = input.value;
+      input.value = '';
+      busy = true;
+      try { await run(v); } finally { busy = false; }
+    });
+
+    input.addEventListener('keydown', (e) => {
+      if (e.key === 'ArrowUp' && history.length) {
+        hIdx = Math.max(0, hIdx - 1);
+        input.value = history[hIdx];
+        e.preventDefault();
+      } else if (e.key === 'ArrowDown' && history.length) {
+        hIdx = Math.min(history.length, hIdx + 1);
+        input.value = history[hIdx] || '';
+        e.preventDefault();
+      }
+    });
+
+    $('.term').addEventListener('click', () => {
+      if (!window.getSelection().toString()) input.focus({ preventScroll: true });
+    });
+
+    (async () => {
+      busy = true;
+      await sleep(400);
+      await play([
+        ['KR15 BIOS v2.0.15  (c) 2015 KR15 SYSTEMS', 'dim'],
+        [[['memory check ........ '], ['640K OK', 'ok']]],
+        [[['mounting /dev/kr15 .. '], ['OK', 'ok']]],
+        [[['storefront.service .. '], ['DECOMMISSIONED', 'err']]],
+        [[['cryostasis .......... '], ['ENGAGED', 'warn']]],
+        ['', ''],
+        ['node is parked. type `help` to poke around.', 'hl'],
+      ], 280);
+      busy = false;
+      if (matchMedia('(pointer: fine)').matches) input.focus({ preventScroll: true });
+    })();
+  })();
+  </script>
+</body>
+</html>
